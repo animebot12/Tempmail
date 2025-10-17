@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr.Arslan Toolkit - Temp Mail</title>
+    <title>Mr.Arslan Toolkit - Real Temp Mail</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -141,6 +141,11 @@
             gap: 6px;
         }
 
+        .copy-email-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
         .inbox-section {
             margin-top: 20px;
         }
@@ -178,6 +183,18 @@
             margin-bottom: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             border-left: 4px solid #007bff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .message-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .message-item.unread {
+            border-left-color: #28a745;
+            background: #f8fff9;
         }
 
         .message-header {
@@ -211,6 +228,10 @@
             color: #555;
             line-height: 1.4;
             font-size: 0.9rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .no-messages {
@@ -298,6 +319,58 @@
             font-size: 12px;
         }
 
+        .message-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .message-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
         @media (min-width: 768px) {
             .container {
                 max-width: 600px;
@@ -321,8 +394,8 @@
             <div class="toolkit-badge">
                 <i class="fas fa-toolbox"></i> Mr.Arslan Toolkit
             </div>
-            <h1><i class="fas fa-envelope"></i> Temporary Email</h1>
-            <p>Free disposable email addresses using Temp-Mail.io API</p>
+            <h1><i class="fas fa-envelope"></i> Real Temporary Email</h1>
+            <p>Get real emails directly on this website</p>
         </div>
 
         <div class="contact-message">
@@ -350,7 +423,7 @@
                 <div class="current-email" id="currentEmail">
                     <i class="fas fa-envelope"></i> Click "New Email" to start
                 </div>
-                <button class="copy-email-btn" id="copyEmailBtn">
+                <button class="copy-email-btn" id="copyEmailBtn" disabled>
                     <i class="far fa-copy"></i> Copy
                 </button>
             </div>
@@ -366,8 +439,8 @@
                 <div class="messages-list" id="messagesList">
                     <div class="no-messages">
                         <i class="fas fa-inbox"></i>
-                        <h3>No email generated yet</h3>
-                        <p>Click "New Email" to create a temporary email address</p>
+                        <h3>Ready to start</h3>
+                        <p>Create a new email address to receive real emails</p>
                     </div>
                 </div>
             </div>
@@ -377,8 +450,21 @@
             <div class="created-by">
                 <i class="fas fa-code"></i> Created by Mr.Arslan
             </div>
-            <div class="api-status">
-                <i class="fas fa-plug"></i> Powered by Temp-Mail.io API
+            <div class="api-status" id="apiStatus">
+                <i class="fas fa-plug"></i> Server: Ready | Service: Waiting
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div class="message-modal" id="messageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalSubject">Message</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Message content will be loaded here -->
             </div>
         </div>
     </div>
@@ -397,100 +483,63 @@
         const moreToolsBtn = document.getElementById('moreToolsBtn');
         const contactBtn = document.getElementById('contactBtn');
         const notification = document.getElementById('notification');
+        const messageModal = document.getElementById('messageModal');
+        const closeModal = document.getElementById('closeModal');
+        const modalSubject = document.getElementById('modalSubject');
+        const modalBody = document.getElementById('modalBody');
+        const apiStatus = document.getElementById('apiStatus');
 
+        const API_BASE = window.location.origin;
         let currentEmailAddress = '';
-        let currentEmailToken = '';
         let messages = [];
+        let currentService = '';
         let refreshInterval;
 
-        // Temp-Mail.io API Configuration
-        const TEMP_MAIL_API = {
-            baseURL: 'https://api.temp-mail.io/api/v1',
-            endpoints: {
-                create: '/email/new',
-                messages: '/messages'
-            }
-        };
-
-        // Create new email using Temp-Mail.io API
+        // Create new email
         async function createNewEmail() {
             try {
                 newEmailBtn.disabled = true;
                 newEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+                copyEmailBtn.disabled = true;
 
-                const response = await fetch(`${TEMP_MAIL_API.baseURL}${TEMP_MAIL_API.endpoints.create}`, {
+                const response = await fetch(`${API_BASE}/api/create-email`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        name: generateRandomString(10)
-                    })
+                        'Content-Type': 'application/json'
+                    }
                 });
 
-                if (!response.ok) {
-                    throw new Error('API request failed');
-                }
-
                 const data = await response.json();
-                
-                if (data.email && data.token) {
+
+                if (data.success) {
                     currentEmailAddress = data.email;
-                    currentEmailToken = data.token;
-                    
                     currentEmail.innerHTML = `<i class="fas fa-envelope"></i> ${currentEmailAddress}`;
+                    copyEmailBtn.disabled = false;
                     messages = [];
                     displayEmails(messages);
                     
-                    // Save to localStorage
                     localStorage.setItem('tempEmail', currentEmailAddress);
-                    localStorage.setItem('tempEmailToken', currentEmailToken);
                     localStorage.setItem('tempEmailMessages', JSON.stringify(messages));
                     
-                    showNotification('New email created successfully!');
-                    
-                    // Start auto-refresh
+                    showNotification('Real email created successfully!');
                     startAutoRefresh();
-                    
+                    await loadEmails();
                 } else {
-                    throw new Error('Invalid API response');
+                    throw new Error(data.error);
                 }
 
             } catch (error) {
-                console.error('Error creating email:', error);
-                showNotification('Failed to create email. Using demo mode.');
-                // Fallback to demo mode
-                createDemoEmail();
+                console.error('Error:', error);
+                showNotification('Failed to create email. Please try again.');
             } finally {
                 newEmailBtn.disabled = false;
                 newEmailBtn.innerHTML = '<i class="fas fa-plus"></i> New Email';
             }
         }
 
-        // Fallback demo email
-        function createDemoEmail() {
-            const domains = ['demo.tmpmail.org', 'test.tmpmail.io', 'example.temp-mail.org'];
-            const randomString = generateRandomString(10);
-            const randomDomain = domains[Math.floor(Math.random() * domains.length)];
-            
-            currentEmailAddress = `${randomString}@${randomDomain}`;
-            currentEmailToken = 'demo-token-' + generateRandomString(20);
-            
-            currentEmail.innerHTML = `<i class="fas fa-envelope"></i> ${currentEmailAddress} (Demo Mode)`;
-            messages = [];
-            displayEmails(messages);
-            
-            showNotification('Demo email created (API not available)');
-        }
-
-        // Generate random string
-        function generateRandomString(length) {
-            return Math.random().toString(36).substring(2, 2 + length);
-        }
-
-        // Load emails from Temp-Mail.io API
+        // Load emails from backend
         async function loadEmails() {
-            if (!currentEmailAddress || !currentEmailToken) {
+            if (!currentEmailAddress) {
                 showNotification('Please create an email first');
                 return;
             }
@@ -499,34 +548,32 @@
                 refreshBtn.disabled = true;
                 refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
 
-                const response = await fetch(
-                    `${TEMP_MAIL_API.baseURL}${TEMP_MAIL_API.endpoints.messages}?email=${currentEmailAddress}&token=${currentEmailToken}`
-                );
+                const response = await fetch(`${API_BASE}/api/messages/${currentEmailAddress}`);
+                const data = await response.json();
 
-                if (response.ok) {
-                    const data = await response.json();
+                if (data.success) {
                     messages = data.messages || [];
+                    currentService = data.service || 'Unknown';
                     displayEmails(messages);
                     
-                    // Save to localStorage
                     localStorage.setItem('tempEmailMessages', JSON.stringify(messages));
+                    apiStatus.innerHTML = `<i class="fas fa-plug"></i> Server: Running | Service: ${currentService}`;
                     
                     if (messages.length > 0) {
-                        showNotification(`Loaded ${messages.length} messages`);
+                        showNotification(`Loaded ${messages.length} messages from ${currentService}`);
                     }
                 } else {
-                    throw new Error('Failed to load messages');
+                    throw new Error(data.error);
                 }
 
             } catch (error) {
                 console.error('Error loading emails:', error);
-                // Load from localStorage as fallback
                 const savedMessages = localStorage.getItem('tempEmailMessages');
                 if (savedMessages) {
                     messages = JSON.parse(savedMessages);
                     displayEmails(messages);
                 }
-                showNotification('Using cached messages');
+                showNotification('Error loading messages');
             } finally {
                 refreshBtn.disabled = false;
                 refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
@@ -539,9 +586,9 @@
                     <div class="no-messages">
                         <i class="fas fa-inbox"></i>
                         <h3>No messages yet</h3>
-                        <p>Use your temporary email to sign up for services</p>
+                        <p>Use your email to sign up for services</p>
                         <p style="margin-top: 10px; font-size: 0.8rem; color: #888;">
-                            Emails will appear here automatically
+                            Real emails will appear here automatically
                         </p>
                     </div>
                 `;
@@ -550,22 +597,52 @@
             }
 
             let emailsHTML = '';
-            emails.forEach(email => {
-                const time = new Date(email.created_at).toLocaleTimeString() || 'Just now';
+            emails.forEach((email, index) => {
+                const isUnread = !email.read;
                 emailsHTML += `
-                    <div class="message-item">
+                    <div class="message-item ${isUnread ? 'unread' : ''}" onclick="showMessage(${index})">
                         <div class="message-header">
-                            <div class="message-sender">${email.from_name || email.from || 'Unknown Sender'}</div>
-                            <div class="message-time">${time}</div>
+                            <div class="message-sender">${email.from}</div>
+                            <div class="message-time">${email.time}</div>
                         </div>
-                        <div class="message-subject">${email.subject || 'No Subject'}</div>
-                        <div class="message-preview">${email.body_preview || 'No content available'}</div>
+                        <div class="message-subject">${email.subject}</div>
+                        <div class="message-preview">${email.body.substring(0, 100)}...</div>
                     </div>
                 `;
             });
 
             messagesList.innerHTML = emailsHTML;
             inboxCount.textContent = `${emails.length} message${emails.length !== 1 ? 's' : ''}`;
+        }
+
+        function showMessage(index) {
+            const message = messages[index];
+            modalSubject.textContent = message.subject;
+            
+            const messageHTML = `
+                <div style="margin-bottom: 15px;">
+                    <strong>From:</strong> ${message.from}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Time:</strong> ${message.time}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Subject:</strong> ${message.subject}
+                </div>
+                <div style="border-top: 1px solid #eee; padding-top: 15px; line-height: 1.6;">
+                    ${message.body}
+                </div>
+            `;
+            
+            modalBody.innerHTML = messageHTML;
+            messageModal.classList.add('active');
+            
+            // Mark as read
+            if (!message.read) {
+                messages[index].read = true;
+                localStorage.setItem('tempEmailMessages', JSON.stringify(messages));
+                displayEmails(messages);
+            }
         }
 
         function copyEmail() {
@@ -593,7 +670,7 @@
             
             setTimeout(() => {
                 notification.classList.remove('show');
-            }, 3000);
+            }, 4000);
         }
 
         function contactUs() {
@@ -605,36 +682,32 @@
         }
 
         function startAutoRefresh() {
-            // Clear existing interval
             if (refreshInterval) {
                 clearInterval(refreshInterval);
             }
-            
-            // Auto refresh every 10 seconds
-            refreshInterval = setInterval(loadEmails, 10000);
+            refreshInterval = setInterval(loadEmails, 10000); // 10 seconds
         }
 
         // Initialize
         function init() {
-            // Load saved email from localStorage
             const savedEmail = localStorage.getItem('tempEmail');
-            const savedToken = localStorage.getItem('tempEmailToken');
             
-            if (savedEmail && savedToken) {
+            if (savedEmail) {
                 currentEmailAddress = savedEmail;
-                currentEmailToken = savedToken;
                 currentEmail.innerHTML = `<i class="fas fa-envelope"></i> ${currentEmailAddress}`;
+                copyEmailBtn.disabled = false;
                 
-                // Load saved messages
                 const savedMessages = localStorage.getItem('tempEmailMessages');
                 if (savedMessages) {
                     messages = JSON.parse(savedMessages);
                     displayEmails(messages);
                 }
                 
-                // Start auto-refresh
                 startAutoRefresh();
+                loadEmails();
             }
+            
+            apiStatus.innerHTML = `<i class="fas fa-plug"></i> Server: Connected | Service: Ready`;
         }
 
         // Event listeners
@@ -648,8 +721,21 @@
         
         contactBtn.addEventListener('click', contactUs);
 
+        closeModal.addEventListener('click', () => {
+            messageModal.classList.remove('active');
+        });
+
+        messageModal.addEventListener('click', (e) => {
+            if (e.target === messageModal) {
+                messageModal.classList.remove('active');
+            }
+        });
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', init);
+
+        // Global function for message click
+        window.showMessage = showMessage;
     </script>
 </body>
 </html>
