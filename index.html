@@ -408,7 +408,7 @@
             loading.style.display = 'block';
 
             try {
-                const response = await fetch(`https://apis-keith.vercel.app/tempmail?email=${currentEmailAddress}`);
+                const response = await fetch(`https://api.temp-mail.io`);
                 const data = await response.json();
 
                 if (data.status && data.messages) {
