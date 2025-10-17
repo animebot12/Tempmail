@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr.Arslan Toolkit - Real Temp Mail</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .toolkit-badge {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .new-email-btn {
+            background: #2196F3;
+        }
+
+        .refresh-btn {
+            background: #FF9800;
+        }
+
+        .more-tools-btn {
+            background: #FF6B6B;
+        }
+
+        .contact-btn {
+            background: #9C27B0;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .email-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin: 15px 0;
+        }
+
+        .email-header {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .current-email {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2c5aa0;
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            word-break: break-all;
+            text-align: center;
+        }
+
+        .copy-email-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .copy-email-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .inbox-section {
+            margin-top: 20px;
+        }
+
+        .inbox-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .inbox-title {
+            font-size: 1.3rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .messages-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 150px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .message-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #007bff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .message-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .message-item.unread {
+            border-left-color: #28a745;
+            background: #f8fff9;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .message-sender {
+            font-weight: bold;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .message-time {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .message-subject {
+            font-weight: 600;
+            color: #2c5aa0;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+
+        .message-preview {
+            color: #555;
+            line-height: 1.4;
+            font-size: 0.9rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .no-messages {
+            text-align: center;
+            color: #666;
+            padding: 40px 15px;
+        }
+
+        .no-messages i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #ccc;
+        }
+
+        .contact-message {
+            background: linear-gradient(45deg, #FFA726, #FF6B6B);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            font-size: 1rem;
+            margin: 30px 0;
+        }
+
+        .spinner {
+            border: 3px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top: 3px solid #007bff;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            font-size: 14px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.7);
+            padding: 15px;
+        }
+
+        .created-by {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 14px;
+        }
+
+        .api-status {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .message-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .message-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 600px;
+            }
+            
+            .email-header {
+                flex-direction: row;
+                align-items: center;
+            }
+            
+            .current-email {
+                text-align: left;
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="toolkit-badge">
+                <i class="fas fa-toolbox"></i> Mr.Arslan Toolkit
+            </div>
+            <h1><i class="fas fa-envelope"></i> Real Temporary Email</h1>
+            <p>Get real emails directly on this website</p>
+        </div>
+
+        <div class="contact-message">
+            <h3><i class="fas fa-info-circle"></i> Need More Tools?</h3>
+            <p>Contact us now for custom solutions!</p>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn new-email-btn" id="newEmailBtn">
+                <i class="fas fa-plus"></i> New Email
+            </button>
+            <button class="btn refresh-btn" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="btn more-tools-btn" id="moreToolsBtn">
+                <i class="fas fa-tools"></i> More Tools
+            </button>
+            <button class="btn contact-btn" id="contactBtn">
+                <i class="fas fa-envelope"></i> Contact
+            </button>
+        </div>
+
+        <div class="email-container">
+            <div class="email-header">
+                <div class="current-email" id="currentEmail">
+                    <i class="fas fa-envelope"></i> Click "New Email" to start
+                </div>
+                <button class="copy-email-btn" id="copyEmailBtn" disabled>
+                    <i class="far fa-copy"></i> Copy
+                </button>
+            </div>
+
+            <div class="inbox-section">
+                <div class="inbox-header">
+                    <h2 class="inbox-title">
+                        <i class="fas fa-inbox"></i> Inbox
+                    </h2>
+                    <div class="inbox-count" id="inboxCount">0 messages</div>
+                </div>
+
+                <div class="messages-list" id="messagesList">
+                    <div class="no-messages">
+                        <i class="fas fa-inbox"></i>
+                        <h3>Ready to start</h3>
+                        <p>Create a new email address to receive real emails</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="created-by">
+                <i class="fas fa-code"></i> Created by Mr.Arslan
+            </div>
+            <div class="api-status" id="apiStatus">
+                <i class="fas fa-plug"></i> Server: Ready | Service: Waiting
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div class="message-modal" id="messageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalSubject">Message</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Message content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        Email copied to clipboard!
+    </div>
+
+    <script>
+        const currentEmail = document.getElementById('currentEmail');
+        const copyEmailBtn = document.getElementById('copyEmailBtn');
+        const messagesList = document.getElementById('messagesList');
+        const inboxCount = document.getElementById('inboxCount');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const newEmailBtn = document.getElementById('newEmailBtn');
+        const moreToolsBtn = document.getElementById('moreToolsBtn');
+        const contactBtn = document.getElementById('contactBtn');
+        const notification = document.getElementById('notification');
+        const messageModal = document.getElementById('messageModal');
+        const closeModal = document.getElementById('closeModal');
+        const modalSubject = document.getElementById('modalSubject');
+        const modalBody = document.getElementById('modalBody');
+        const apiStatus = document.getElementById('apiStatus');
+
+        const API_BASE = window.location.origin;
+        let currentEmailAddress = '';
+        let messages = [];
+        let currentService = '';
+        let refreshInterval;
+
+        // Create new email
+        async function createNewEmail() {
+            try {
+                newEmailBtn.disabled = true;
+                newEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+                copyEmailBtn.disabled = true;
+
+                const response = await fetch(`${API_BASE}/api/create-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentEmailAddress = data.email;
+                    currentEmail.innerHTML = `<i class="fas fa-envelope"></i> ${currentEmailAddress}`;
+                    copyEmailBtn.disabled = false;
+                    messages = [];
+                    displayEmails(messages);
+                    
+                    localStorage.setItem('tempEmail', currentEmailAddress);
+                    localStorage.setItem('tempEmailMessages', JSON.stringify(messages));
+                    
+                    showNotification('Real email created successfully!');
+                    startAutoRefresh();
+                    await loadEmails();
+                } else {
+                    throw new Error(data.error);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Failed to create email. Please try again.');
+            } finally {
+                newEmailBtn.disabled = false;
+                newEmailBtn.innerHTML = '<i class="fas fa-plus"></i> New Email';
+            }
+        }
+
+        // Load emails from backend
+        async function loadEmails() {
+            if (!currentEmailAddress) {
+                showNotification('Please create an email first');
+                return;
+            }
+
+            try {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+                const response = await fetch(`${API_BASE}/api/messages/${currentEmailAddress}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    messages = data.messages || [];
+                    currentService = data.service || 'Unknown';
+                    displayEmails(messages);
+                    
+                    localStorage.setItem('tempEmailMessages', JSON.stringify(messages));
+                    apiStatus.innerHTML = `<i class="fas fa-plug"></i> Server: Running | Service: ${currentService}`;
+                    
+                    if (messages.length > 0) {
+                        showNotification(`Loaded ${messages.length} messages from ${currentService}`);
+                    }
+                } else {
+                    throw new Error(data.error);
+                }
+
+            } catch (error) {
+                console.error('Error loading emails:', error);
+                const savedMessages = localStorage.getItem('tempEmailMessages');
+                if (savedMessages) {
+                    messages = JSON.parse(savedMessages);
+                    displayEmails(messages);
+                }
+                showNotification('Error loading messages');
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            }
+        }
+
+        function displayEmails(emails) {
+            if (emails.length === 0) {
+                messagesList.innerHTML = `
+                    <div class="no-messages">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No messages yet</h3>
+                        <p>Use your email to sign up for services</p>
+                        <p style="margin-top: 10px; font-size: 0.8rem; color: #888;">
+                            Real emails will appear here automatically
+                        </p>
+                    </div>
+                `;
+                inboxCount.textContent = '0 messages';
+                return;
+            }
+
+            let emailsHTML = '';
+            emails.forEach((email, index) => {
+                const isUnread = !email.read;
+                emailsHTML += `
+                    <div class="message-item ${isUnread ? 'unread' : ''}" onclick="showMessage(${index})">
+                        <div class="message-header">
+                            <div class="message-sender">${email.from}</div>
+                            <div class="message-time">${email.time}</div>
+                        </div>
+                        <div class="message-subject">${email.subject}</div>
+                        <div class="message-preview">${email.body.substring(0, 100)}...</div>
+                    </div>
+                `;
+            });
+
+            messagesList.innerHTML = emailsHTML;
+            inboxCount.textContent = `${emails.length} message${emails.length !== 1 ? 's' : ''}`;
+        }
+
+        function showMessage(index) {
+            const message = messages[index];
+            modalSubject.textContent = message.subject;
+            
+            const messageHTML = `
+                <div style="margin-bottom: 15px;">
+                    <strong>From:</strong> ${message.from}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Time:</strong> ${message.time}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>Subject:</strong> ${message.subject}
+                </div>
+                <div style="border-top: 1px solid #eee; padding-top: 15px; line-height: 1.6;">
+                    ${message.body}
+                </div>
+            `;
+            
+            modalBody.innerHTML = messageHTML;
+            messageModal.classList.add('active');
+            
+            // Mark as read
+            if (!message.read) {
+                messages[index].read = true;
+                localStorage.setItem('tempEmailMessages', JSON.stringify(messages));
+                displayEmails(messages);
+            }
+        }
+
+        function copyEmail() {
+            if (!currentEmailAddress) {
+                showNotification('Please create an email first');
+                return;
+            }
+            
+            navigator.clipboard.writeText(currentEmailAddress).then(() => {
+                showNotification('Email copied to clipboard!');
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = currentEmailAddress;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showNotification('Email copied to clipboard!');
+            });
+        }
+
+        function showNotification(message) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        function contactUs() {
+            const email = 'animebot0299@gmail.com';
+            const subject = 'Need More Tools - Mr.Arslan Toolkit';
+            const body = 'Hello Mr.Arslan,\n\nI need more tools for my website.\n\nThank you!';
+            
+            window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+
+        function startAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+            refreshInterval = setInterval(loadEmails, 10000); // 10 seconds
+        }
+
+        // Initialize
+        function init() {
+            const savedEmail = localStorage.getItem('tempEmail');
+            
+            if (savedEmail) {
+                currentEmailAddress = savedEmail;
+                currentEmail.innerHTML = `<i class="fas fa-envelope"></i> ${currentEmailAddress}`;
+                copyEmailBtn.disabled = false;
+                
+                const savedMessages = localStorage.getItem('tempEmailMessages');
+                if (savedMessages) {
+                    messages = JSON.parse(savedMessages);
+                    displayEmails(messages);
+                }
+                
+                startAutoRefresh();
+                loadEmails();
+            }
+            
+            apiStatus.innerHTML = `<i class="fas fa-plug"></i> Server: Connected | Service: Ready`;
+        }
+
+        // Event listeners
+        copyEmailBtn.addEventListener('click', copyEmail);
+        refreshBtn.addEventListener('click', loadEmails);
+        newEmailBtn.addEventListener('click', createNewEmail);
+        
+        moreToolsBtn.addEventListener('click', () => {
+            showNotification('More tools coming soon!');
+        });
+        
+        contactBtn.addEventListener('click', contactUs);
+
+        closeModal.addEventListener('click', () => {
+            messageModal.classList.remove('active');
+        });
+
+        messageModal.addEventListener('click', (e) => {
+            if (e.target === messageModal) {
+                messageModal.classList.remove('active');
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Global function for message click
+        window.showMessage = showMessage;
+    </script>
+</body>
+</html>
